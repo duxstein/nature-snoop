@@ -1,9 +1,35 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
+import { toast } from "sonner";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    // Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (event === 'SIGNED_OUT') {
+        toast.success('Successfully signed out');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-natural-50 to-natural-100">
@@ -11,19 +37,31 @@ const Index = () => {
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <div className="text-2xl font-semibold text-natural-800">PlantAI</div>
           <div className="space-x-4">
-            <Button
-              variant="ghost"
-              className="text-natural-800 hover:text-natural-600"
-              onClick={() => navigate("/login")}
-            >
-              Login
-            </Button>
-            <Button
-              className="bg-natural-600 hover:bg-natural-700 text-white"
-              onClick={() => navigate("/signup")}
-            >
-              Sign Up
-            </Button>
+            {user ? (
+              <Button
+                variant="ghost"
+                className="text-natural-800 hover:text-natural-600"
+                onClick={handleSignOut}
+              >
+                Sign Out
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  className="text-natural-800 hover:text-natural-600"
+                  onClick={() => navigate("/login")}
+                >
+                  Login
+                </Button>
+                <Button
+                  className="bg-natural-600 hover:bg-natural-700 text-white"
+                  onClick={() => navigate("/signup")}
+                >
+                  Sign Up
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </nav>
@@ -38,19 +76,22 @@ const Index = () => {
               className="text-center max-w-3xl mx-auto"
             >
               <h1 className="text-5xl font-bold text-natural-800 mb-6">
-                Discover the World of Plants
+                {user ? `Welcome Back!` : 'Discover the World of Plants'}
               </h1>
               <p className="text-xl text-natural-600 mb-8">
-                Instantly identify plants, learn about their characteristics, and
-                track your botanical discoveries with our AI-powered platform.
+                {user
+                  ? "Start identifying plants and building your collection today."
+                  : "Instantly identify plants, learn about their characteristics, and track your botanical discoveries with our AI-powered platform."}
               </p>
-              <Button
-                size="lg"
-                className="bg-natural-600 hover:bg-natural-700 text-white"
-                onClick={() => navigate("/signup")}
-              >
-                Start Identifying Plants
-              </Button>
+              {!user && (
+                <Button
+                  size="lg"
+                  className="bg-natural-600 hover:bg-natural-700 text-white"
+                  onClick={() => navigate("/signup")}
+                >
+                  Start Identifying Plants
+                </Button>
+              )}
             </motion.div>
 
             <motion.div

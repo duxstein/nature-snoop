@@ -9,6 +9,57 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      plant_identifications: {
+        Row: {
+          additional_info: Json | null
+          confidence_score: number | null
+          created_at: string
+          id: string
+          identified_name: string | null
+          image_url: string
+          user_id: string
+        }
+        Insert: {
+          additional_info?: Json | null
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          identified_name?: string | null
+          image_url: string
+          user_id: string
+        }
+        Update: {
+          additional_info?: Json | null
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          identified_name?: string | null
+          image_url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
       todos: {
         Row: {
           completed: boolean | null
