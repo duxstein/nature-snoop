@@ -26,8 +26,12 @@ const Signup = () => {
           appearance={{ theme: ThemeSupa }}
           theme="light"
           providers={["google", "github"]}
-          view="sign_up"
           redirectTo={`${window.location.origin}/`}
+          showLinks={false}
+          view="sign_up"
+          additionalData={{
+            email_confirm: false
+          }}
         />
       </Card>
     </div>
