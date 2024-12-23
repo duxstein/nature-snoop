@@ -32,6 +32,14 @@ const Signup = () => {
           additionalData={{
             email_confirm: false
           }}
+          localization={{
+            variables: {
+              sign_up: {
+                password_label: 'Password (minimum 6 characters)',
+                password_input_placeholder: 'Enter a password (min. 6 characters)'
+              }
+            }
+          }}
         />
       </Card>
     </div>
