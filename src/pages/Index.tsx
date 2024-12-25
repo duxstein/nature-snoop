@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import PlantIdentificationActions from "@/components/plant/PlantIdentificationActions";
 import PlantIdentificationResult from "@/components/plant/PlantIdentificationResult";
 import FeatureCard from "@/components/plant/FeatureCard";
+import Footer from "@/components/Footer";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -74,10 +75,12 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-natural-50 to-natural-100">
+    <div className="min-h-screen bg-gradient-to-b from-natural-50 via-white to-natural-100">
       <nav className="fixed w-full bg-white/80 backdrop-blur-sm border-b border-natural-200 z-50">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <div className="text-2xl font-semibold text-natural-800">PlantAI</div>
+          <div className="text-2xl font-semibold text-natural-800 bg-gradient-to-r from-natural-600 to-natural-800 bg-clip-text text-transparent">
+            PlantAI
+          </div>
           <div className="space-x-4">
             {user ? (
               <Button
@@ -108,8 +111,10 @@ const Index = () => {
         </div>
       </nav>
 
-      <main>
-        <section className="pt-32 pb-20 px-4">
+      <main className="relative">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-natural-200/30 via-transparent to-transparent pointer-events-none" />
+        
+        <section className="pt-32 pb-20 px-4 relative">
           <div className="container mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -117,7 +122,7 @@ const Index = () => {
               transition={{ duration: 0.6 }}
               className="text-center max-w-3xl mx-auto"
             >
-              <h1 className="text-5xl font-bold text-natural-800 mb-6">
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-natural-800 to-natural-600 bg-clip-text text-transparent mb-6">
                 {user ? `Welcome Back!` : 'Discover the World of Plants'}
               </h1>
               <p className="text-xl text-natural-600 mb-8">
@@ -145,7 +150,10 @@ const Index = () => {
             </motion.div>
 
             {identificationResult && (
-              <PlantIdentificationResult result={identificationResult} />
+              <PlantIdentificationResult 
+                result={identificationResult}
+                imageUrl={identificationResult.image_url}
+              />
             )}
 
             <motion.div
@@ -173,6 +181,8 @@ const Index = () => {
           </div>
         </section>
       </main>
+
+      <Footer />
     </div>
   );
 };
