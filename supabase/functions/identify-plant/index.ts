@@ -17,9 +17,9 @@ serve(async (req) => {
     const { imageUrl } = await req.json()
     console.log('Processing image URL:', imageUrl)
     
-    // Initialize Gemini
+    // Initialize Gemini with the new model
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '')
-    const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" })
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
     // Fetch image data
     const response = await fetch(imageUrl)
