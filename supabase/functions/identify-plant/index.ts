@@ -4,16 +4,18 @@ import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.3"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-user-id',
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
     const { imageUrl } = await req.json()
+    console.log('Processing image URL:', imageUrl)
     
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '')
@@ -21,7 +23,12 @@ serve(async (req) => {
 
     // Fetch image data
     const response = await fetch(imageUrl)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`)
+    }
+    
     const imageData = await response.arrayBuffer()
+    console.log('Image data fetched successfully')
     
     // Convert array buffer to base64
     const base64 = btoa(String.fromCharCode(...new Uint8Array(imageData)))
@@ -34,6 +41,7 @@ serve(async (req) => {
       }
     }]
 
+    console.log('Sending request to Gemini API')
     // Generate content
     const result = await model.generateContent([
       "Identify this plant and provide the following information in JSON format: " +
@@ -45,6 +53,7 @@ serve(async (req) => {
       ...imageParts
     ])
     const response_text = result.response.text()
+    console.log('Received response from Gemini API')
     
     // Parse the JSON response
     let parsedResponse
@@ -83,17 +92,29 @@ serve(async (req) => {
 
     if (dbError) {
       console.error('Database error:', dbError)
+      throw dbError
     }
 
     return new Response(
       JSON.stringify(parsedResponse),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
     )
   } catch (error) {
     console.error('Error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        }, 
+        status: 500 
+      }
     )
   }
 })
