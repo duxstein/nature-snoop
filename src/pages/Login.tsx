@@ -25,27 +25,21 @@ const Login = () => {
       if (event === 'PASSWORD_RECOVERY') {
         toast.info('Check your email for password reset instructions');
       }
-      // Handle error events
-      if (event === 'USER_DELETED') {
-        toast.error('Account has been deleted');
-      }
     });
 
-    // Listen for auth errors
-    const errorListener = supabase.auth.onError((error) => {
-      console.error('Auth error:', error);
-      if (error.message.includes('weak_password')) {
-        toast.error('Password must be at least 6 characters long');
-      } else if (error.message.includes('invalid_credentials')) {
-        toast.error('Invalid email or password');
-      } else {
-        toast.error('An error occurred. Please try again.');
+    // Handle auth state errors
+    const {
+      data: { subscription: errorSubscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'USER_DELETED') {
+        toast.error('Account has been deleted');
+        navigate("/login");
       }
     });
 
     return () => {
       subscription.unsubscribe();
-      errorListener.data.subscription.unsubscribe();
+      errorSubscription.unsubscribe();
     };
   }, [navigate]);
 
