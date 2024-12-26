@@ -19,6 +19,13 @@ const Login = () => {
         toast.success('Successfully signed out!');
         navigate("/login");
       }
+      if (event === 'USER_UPDATED') {
+        toast.success('Account updated successfully!');
+      }
+      // Handle specific error cases
+      if (event === 'PASSWORD_RECOVERY') {
+        toast.info('Check your email for password reset instructions');
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -43,6 +50,37 @@ const Login = () => {
           theme="light"
           providers={[]}
           redirectTo={window.location.origin}
+          localization={{
+            variables: {
+              sign_up: {
+                password_label: 'Password (minimum 6 characters)',
+                password_input_placeholder: 'Enter a password (min. 6 characters)',
+                email_input_placeholder: 'Your email address',
+                button_label: 'Sign up',
+                loading_button_label: 'Creating account...',
+                social_provider_text: 'Sign in with {{provider}}',
+                link_text: "Don't have an account? Sign up",
+              },
+              sign_in: {
+                password_label: 'Your password',
+                email_input_placeholder: 'Your email address',
+                button_label: 'Sign in',
+                loading_button_label: 'Signing in...',
+                social_provider_text: 'Sign in with {{provider}}',
+                link_text: 'Already have an account? Sign in',
+              },
+            },
+          }}
+          onError={(error) => {
+            console.error('Auth error:', error);
+            if (error.message.includes('weak_password')) {
+              toast.error('Password must be at least 6 characters long');
+            } else if (error.message.includes('invalid_credentials')) {
+              toast.error('Invalid email or password');
+            } else {
+              toast.error('An error occurred. Please try again.');
+            }
+          }}
         />
       </Card>
     </div>
