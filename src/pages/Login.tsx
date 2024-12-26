@@ -22,13 +22,31 @@ const Login = () => {
       if (event === 'USER_UPDATED') {
         toast.success('Account updated successfully!');
       }
-      // Handle specific error cases
       if (event === 'PASSWORD_RECOVERY') {
         toast.info('Check your email for password reset instructions');
       }
+      // Handle error events
+      if (event === 'USER_DELETED') {
+        toast.error('Account has been deleted');
+      }
     });
 
-    return () => subscription.unsubscribe();
+    // Listen for auth errors
+    const errorListener = supabase.auth.onError((error) => {
+      console.error('Auth error:', error);
+      if (error.message.includes('weak_password')) {
+        toast.error('Password must be at least 6 characters long');
+      } else if (error.message.includes('invalid_credentials')) {
+        toast.error('Invalid email or password');
+      } else {
+        toast.error('An error occurred. Please try again.');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+      errorListener.data.subscription.unsubscribe();
+    };
   }, [navigate]);
 
   return (
@@ -70,16 +88,6 @@ const Login = () => {
                 link_text: 'Already have an account? Sign in',
               },
             },
-          }}
-          onError={(error) => {
-            console.error('Auth error:', error);
-            if (error.message.includes('weak_password')) {
-              toast.error('Password must be at least 6 characters long');
-            } else if (error.message.includes('invalid_credentials')) {
-              toast.error('Invalid email or password');
-            } else {
-              toast.error('An error occurred. Please try again.');
-            }
           }}
         />
       </Card>
