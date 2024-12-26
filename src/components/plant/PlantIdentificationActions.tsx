@@ -67,9 +67,7 @@ const PlantIdentificationActions = ({
     const file = event.target.files?.[0];
     if (file) {
       try {
-        // Convert File to Blob
-        const blob = new Blob([file], { type: file.type });
-        await onImageCapture(blob);
+        await onImageCapture(file);
         // Reset the input value to allow selecting the same file again
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
@@ -83,7 +81,7 @@ const PlantIdentificationActions = ({
 
   return (
     <div className="flex justify-center gap-4 mb-8">
-      <Dialog>
+      <Dialog open={showCamera} onOpenChange={(open) => !open && stopCamera()}>
         <DialogTrigger asChild>
           <Button
             onClick={() => {
