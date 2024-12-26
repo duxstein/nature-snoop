@@ -9,6 +9,7 @@ import PlantIdentificationActions from "@/components/plant/PlantIdentificationAc
 import PlantIdentificationResult from "@/components/plant/PlantIdentificationResult";
 import FeatureCard from "@/components/plant/FeatureCard";
 import Footer from "@/components/Footer";
+import WavingPlant from "@/components/WavingPlant";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -76,6 +77,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-natural-50 via-white to-natural-100">
+      <WavingPlant />
       <nav className="fixed w-full bg-white/80 backdrop-blur-sm border-b border-natural-200 z-50">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <div className="text-2xl font-semibold text-natural-800 bg-gradient-to-r from-natural-600 to-natural-800 bg-clip-text text-transparent">
