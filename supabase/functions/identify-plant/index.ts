@@ -36,17 +36,28 @@ serve(async (req) => {
       throw new Error(`Failed to fetch image: ${imageResponse.statusText}`);
     }
     
+    // Convert the image to base64 in chunks to prevent stack overflow
     const imageData = await imageResponse.blob();
-    console.log('Successfully fetched image data');
+    const chunks = [];
+    const reader = new FileReader();
+    
+    const base64Promise = new Promise((resolve, reject) => {
+      reader.onload = () => {
+        const base64String = reader.result as string;
+        // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+        const base64Data = base64String.split(',')[1];
+        resolve(base64Data);
+      };
+      reader.onerror = reject;
+    });
+    
+    reader.readAsDataURL(imageData);
+    const base64Image = await base64Promise;
+    console.log('Successfully converted image to base64');
 
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-vision-latest" });
-
-    // Convert blob to base64
-    const imageBytes = await imageData.arrayBuffer();
-    const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageBytes)));
-    console.log('Converted image to base64');
 
     const prompt = `Analyze this plant image and provide:
     1. Common name
