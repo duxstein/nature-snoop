@@ -10,12 +10,18 @@ import PlantIdentificationResult from "@/components/plant/PlantIdentificationRes
 import FeatureCard from "@/components/plant/FeatureCard";
 import Footer from "@/components/Footer";
 import WavingPlant from "@/components/WavingPlant";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card } from "@/components/ui/card";
+import { format } from "date-fns";
+import { Trash2 } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [isIdentifying, setIsIdentifying] = useState(false);
   const [identificationResult, setIdentificationResult] = useState<any>(null);
+  const [searchHistory, setSearchHistory] = useState<any[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -33,6 +39,30 @@ const Index = () => {
       subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchSearchHistory();
+    }
+  }, [user]);
+
+  const fetchSearchHistory = async () => {
+    setIsLoadingHistory(true);
+    try {
+      const { data, error } = await supabase
+        .from('search_history')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setSearchHistory(data || []);
+    } catch (error) {
+      console.error('Error fetching search history:', error);
+      toast.error('Failed to load search history');
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -65,13 +95,38 @@ const Index = () => {
 
       if (identificationError) throw identificationError;
 
+      // Save to search history
+      await supabase.from('search_history').insert({
+        user_id: user.id,
+        search_term: identificationData.name || 'Unknown plant',
+        image_url: publicUrl,
+        result: identificationData
+      });
+
       setIdentificationResult(identificationData);
       toast.success('Plant identified successfully!');
+      fetchSearchHistory(); // Refresh history after new search
     } catch (error) {
       console.error('Error:', error);
       toast.error('Failed to identify plant');
     } finally {
       setIsIdentifying(false);
+    }
+  };
+
+  const handleDeleteHistory = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('search_history')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      toast.success('Search history entry deleted');
+      fetchSearchHistory();
+    } catch (error) {
+      console.error('Error deleting history:', error);
+      toast.error('Failed to delete history entry');
     }
   };
 
@@ -156,6 +211,44 @@ const Index = () => {
                 result={identificationResult}
                 imageUrl={identificationResult.image_url}
               />
+            )}
+
+            {user && searchHistory.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                className="mt-16"
+              >
+                <h2 className="text-2xl font-semibold text-natural-800 mb-6">Your Search History</h2>
+                <ScrollArea className="h-[400px] rounded-lg border border-natural-200 bg-white/50 backdrop-blur-sm p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {searchHistory.map((item) => (
+                      <Card key={item.id} className="p-4 relative group">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleDeleteHistory(item.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-natural-600" />
+                        </Button>
+                        <div className="aspect-square rounded-lg overflow-hidden mb-3">
+                          <img
+                            src={item.image_url}
+                            alt={item.search_term}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <h3 className="font-medium text-natural-800">{item.search_term}</h3>
+                        <p className="text-sm text-natural-600">
+                          {format(new Date(item.created_at), 'MMM d, yyyy')}
+                        </p>
+                      </Card>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </motion.div>
             )}
 
             <motion.div
