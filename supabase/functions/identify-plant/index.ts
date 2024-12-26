@@ -57,37 +57,30 @@ serve(async (req) => {
 
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Updated to use the new model
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const prompt = `Analyze this plant image and provide:
+    const prompt = `Analyze this plant image and provide the following information in a clear, structured format:
     1. Common name
     2. Scientific name
     3. Brief description
-    4. Detailed care instructions including:
-       - Light requirements
-       - Watering needs
-       - Soil preferences
-       - Temperature range
-       - Humidity requirements
-       - Fertilization schedule
-       - Propagation methods
-    5. Confidence level of identification (High/Medium/Low)
-    
-    Format the response as a JSON object with these exact keys:
+    4. Care instructions including light, water, soil, temperature, humidity, fertilizer, and propagation
+    5. Confidence level (High/Medium/Low)
+
+    Respond with only the requested information in this exact JSON format:
     {
-      "common_name": "",
-      "scientific_name": "",
-      "description": "",
+      "common_name": "string",
+      "scientific_name": "string",
+      "description": "string",
       "care_instructions": {
-        "light": "",
-        "water": "",
-        "soil": "",
-        "temperature": "",
-        "humidity": "",
-        "fertilizer": "",
-        "propagation": ""
+        "light": "string",
+        "water": "string",
+        "soil": "string",
+        "temperature": "string",
+        "humidity": "string",
+        "fertilizer": "string",
+        "propagation": "string"
       },
-      "confidence_level": ""
+      "confidence_level": "string"
     }`;
 
     console.log('Sending request to Gemini API');
@@ -103,11 +96,17 @@ serve(async (req) => {
 
     const response = result.response;
     const text = response.text();
-    console.log('Received response from Gemini API');
+    console.log('Raw Gemini response:', text);
+    
+    // Extract JSON from the response
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('Failed to extract JSON from Gemini response');
+    }
     
     // Parse the JSON response
-    const plantData = JSON.parse(text);
-    console.log('Successfully parsed plant data');
+    const plantData = JSON.parse(jsonMatch[0]);
+    console.log('Successfully parsed plant data:', plantData);
 
     // Store the result in Supabase
     const supabase = createClient(
