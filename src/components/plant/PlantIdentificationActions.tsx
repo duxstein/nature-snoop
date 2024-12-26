@@ -56,17 +56,28 @@ const PlantIdentificationActions = ({
         canvas.toBlob(async (blob) => {
           if (blob) {
             await onImageCapture(blob);
+            stopCamera();
           }
         }, 'image/jpeg');
       }
-      stopCamera();
     }
   };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      await onImageCapture(file);
+      try {
+        // Convert File to Blob
+        const blob = new Blob([file], { type: file.type });
+        await onImageCapture(blob);
+        // Reset the input value to allow selecting the same file again
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      } catch (error) {
+        console.error('Error handling file:', error);
+        toast.error('Failed to process image');
+      }
     }
   };
 
