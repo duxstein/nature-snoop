@@ -87,30 +87,6 @@ export type Database = {
         }
         Relationships: []
       }
-      todos: {
-        Row: {
-          completed: boolean | null
-          created_at: string
-          id: string
-          text: string
-          user_id: string
-        }
-        Insert: {
-          completed?: boolean | null
-          created_at?: string
-          id?: string
-          text: string
-          user_id: string
-        }
-        Update: {
-          completed?: boolean | null
-          created_at?: string
-          id?: string
-          text?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
