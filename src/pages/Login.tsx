@@ -60,7 +60,7 @@ const Login = () => {
             }
           }}
           theme="light"
-          providers={["google", "github"]}
+          providers={[]}
           redirectTo={window.location.origin}
           localization={{
             variables: {

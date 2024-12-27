@@ -35,7 +35,7 @@ const Signup = () => {
             }
           }}
           theme="light"
-          providers={["google", "github"]}
+          providers={[]}
           redirectTo={`${window.location.origin}/`}
           showLinks={false}
           view="sign_up"
