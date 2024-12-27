@@ -37,7 +37,7 @@ const Signup = () => {
           theme="light"
           providers={[]}
           redirectTo={`${window.location.origin}/`}
-          showLinks={false}
+          showLinks={true}
           view="sign_up"
           localization={{
             variables: {
@@ -48,6 +48,7 @@ const Signup = () => {
                 button_label: 'Sign up',
                 loading_button_label: 'Creating account...',
                 social_provider_text: 'Sign up with {{provider}}',
+                link_text: 'Already have an account? Sign in',
               }
             }
           }}
