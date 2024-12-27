@@ -25,6 +25,10 @@ const Login = () => {
       if (event === 'PASSWORD_RECOVERY') {
         toast.info('Check your email for password reset instructions');
       }
+      if (event === 'PASSWORD_RESET') {
+        toast.success('Password has been reset successfully!');
+        navigate("/");
+      }
     });
 
     // Handle auth state errors
@@ -72,6 +76,17 @@ const Login = () => {
                 loading_button_label: 'Signing in...',
                 social_provider_text: 'Sign in with {{provider}}',
                 link_text: "Don't have an account? Sign up",
+              },
+              forgotten_password: {
+                button_label: 'Send reset instructions',
+                loading_button_label: 'Sending reset instructions...',
+                link_text: 'Forgot your password?',
+                confirmation_text: 'Check your email for the password reset link',
+              },
+              update_password: {
+                button_label: 'Update password',
+                loading_button_label: 'Updating password...',
+                confirmation_text: 'Your password has been updated',
               },
             },
           }}
