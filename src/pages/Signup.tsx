@@ -23,20 +23,31 @@ const Signup = () => {
       <Card className="w-[400px] p-6 bg-white/80 backdrop-blur-sm">
         <Auth
           supabaseClient={supabase}
-          appearance={{ theme: ThemeSupa }}
+          appearance={{
+            theme: ThemeSupa,
+            variables: {
+              default: {
+                colors: {
+                  brand: '#22c55e',
+                  brandAccent: '#16a34a',
+                }
+              }
+            }
+          }}
           theme="light"
           providers={["google", "github"]}
           redirectTo={`${window.location.origin}/`}
           showLinks={false}
           view="sign_up"
-          additionalData={{
-            email_confirm: false
-          }}
           localization={{
             variables: {
               sign_up: {
                 password_label: 'Password (minimum 6 characters)',
-                password_input_placeholder: 'Enter a password (min. 6 characters)'
+                password_input_placeholder: 'Enter a password (min. 6 characters)',
+                email_input_placeholder: 'Your email address',
+                button_label: 'Sign up',
+                loading_button_label: 'Creating account...',
+                social_provider_text: 'Sign up with {{provider}}',
               }
             }
           }}

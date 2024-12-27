@@ -30,8 +30,8 @@ const Login = () => {
     // Handle auth state errors
     const {
       data: { subscription: errorSubscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'USER_DELETED') {
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'USER_DELETED' as any) {
         toast.error('Account has been deleted');
         navigate("/login");
       }
@@ -60,7 +60,7 @@ const Login = () => {
             }
           }}
           theme="light"
-          providers={[]}
+          providers={["google", "github"]}
           redirectTo={window.location.origin}
           localization={{
             variables: {
