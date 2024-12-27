@@ -62,24 +62,16 @@ const Login = () => {
           theme="light"
           providers={[]}
           redirectTo={window.location.origin}
+          view="sign_in"
           localization={{
             variables: {
-              sign_up: {
-                password_label: 'Password (minimum 6 characters)',
-                password_input_placeholder: 'Enter a password (min. 6 characters)',
-                email_input_placeholder: 'Your email address',
-                button_label: 'Sign up',
-                loading_button_label: 'Creating account...',
-                social_provider_text: 'Sign in with {{provider}}',
-                link_text: "Don't have an account? Sign up",
-              },
               sign_in: {
                 password_label: 'Your password',
                 email_input_placeholder: 'Your email address',
                 button_label: 'Sign in',
                 loading_button_label: 'Signing in...',
                 social_provider_text: 'Sign in with {{provider}}',
-                link_text: 'Already have an account? Sign in',
+                link_text: "Don't have an account? Sign up",
               },
             },
           }}
