@@ -65,7 +65,7 @@ const Login = () => {
           }}
           theme="light"
           providers={[]}
-          redirectTo={`${window.location.origin}/login`}
+          redirectTo={window.location.origin}
           view="sign_in"
           localization={{
             variables: {
