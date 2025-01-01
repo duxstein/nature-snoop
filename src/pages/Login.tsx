@@ -25,7 +25,7 @@ const Login = () => {
       if (event === 'PASSWORD_RECOVERY') {
         toast.info('Check your email for password reset instructions');
       }
-      if (event === 'PASSWORD_RESET') {
+      if (event === 'PASSWORD_RESET' as any) {
         toast.success('Password has been reset successfully!');
         navigate("/");
       }
