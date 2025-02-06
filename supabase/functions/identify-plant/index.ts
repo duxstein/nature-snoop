@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.3";
@@ -12,17 +13,25 @@ const corsHeaders = {
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Helper function to try model with retry logic and model fallback
-async function tryWithRetries(genAI: any, prompt: string, imageData: any, retries = 5) {
+async function tryWithRetries(genAI: any, prompt: string, imageData: any, maxRetries = 7) {
   const models = ['gemini-1.5-flash', 'gemini-1.5-pro-vision'];
+  const maxRetryTime = 60000; // Maximum 60 seconds of total retry time
+  const startTime = Date.now();
   let lastError;
 
   for (const modelName of models) {
-    console.log(`Attempting with model: ${modelName}`);
+    console.log(`Starting attempts with model: ${modelName}`);
     const model = genAI.getGenerativeModel({ model: modelName });
 
-    for (let i = 0; i < retries; i++) {
+    for (let i = 0; i < maxRetries; i++) {
+      // Check if we've exceeded max retry time
+      if (Date.now() - startTime > maxRetryTime) {
+        console.log('Maximum retry time exceeded');
+        break;
+      }
+
       try {
-        console.log(`Attempt ${i + 1} with ${modelName}`);
+        console.log(`Attempt ${i + 1}/${maxRetries} with ${modelName}`);
         const result = await model.generateContent([
           prompt,
           {
@@ -32,6 +41,11 @@ async function tryWithRetries(genAI: any, prompt: string, imageData: any, retrie
             }
           }
         ]);
+
+        if (!result || !result.response) {
+          throw new Error('Empty response from model');
+        }
+
         console.log(`Successfully generated content with ${modelName} on attempt ${i + 1}`);
         return result;
       } catch (error) {
@@ -39,10 +53,10 @@ async function tryWithRetries(genAI: any, prompt: string, imageData: any, retrie
         lastError = error;
         
         if (error.message.includes('503') || error.message.includes('overloaded')) {
-          const baseDelay = 3000; // Start with 3s base delay
-          const waitTime = baseDelay * Math.pow(2, i); // Exponential backoff
-          const jitter = Math.random() * 1000; // Add random jitter up to 1s
-          const totalWaitTime = waitTime + jitter;
+          const baseDelay = 5000; // Start with 5s base delay
+          const waitTime = baseDelay * Math.pow(1.5, i); // Less aggressive exponential backoff
+          const jitter = Math.random() * 2000; // Add random jitter up to 2s
+          const totalWaitTime = Math.min(waitTime + jitter, 15000); // Cap at 15s
           
           console.log(`Model ${modelName} overloaded. Waiting ${totalWaitTime}ms before next attempt`);
           await delay(totalWaitTime);
@@ -54,14 +68,16 @@ async function tryWithRetries(genAI: any, prompt: string, imageData: any, retrie
           break; // Try next model
         }
         
-        break; // If it's not a retriable error, stop trying
+        // For other errors, try the next model
+        console.log(`Unexpected error with ${modelName}, trying next model`);
+        break;
       }
     }
   }
 
-  // If all retries with all models failed, throw a more informative error
+  // If all retries with all models failed, throw a user-friendly error
   console.error('All retry attempts with all models failed:', lastError);
-  throw new Error(`Service temporarily unavailable. We tried multiple models with several retries but the service is currently experiencing high load. Please try again in a few minutes.`);
+  throw new Error(`The image identification service is currently experiencing unusually high traffic. Please wait a minute or two and try again. If the problem persists, you might want to try with a different image.`);
 }
 
 serve(async (req) => {
@@ -209,3 +225,4 @@ serve(async (req) => {
     );
   }
 });
+
