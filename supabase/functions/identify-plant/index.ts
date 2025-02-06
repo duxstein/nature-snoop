@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.3";
@@ -12,42 +11,57 @@ const corsHeaders = {
 // Helper function to add delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Helper function to try model with retry logic
+// Helper function to try model with retry logic and model fallback
 async function tryWithRetries(genAI: any, prompt: string, imageData: any, retries = 5) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const models = ['gemini-1.5-flash', 'gemini-1.5-pro-vision'];
   let lastError;
 
-  for (let i = 0; i < retries; i++) {
-    try {
-      console.log(`Attempt ${i + 1} with gemini-1.5-flash`);
-      const result = await model.generateContent([
-        prompt,
-        {
-          inlineData: {
-            mimeType: "image/jpeg",
-            data: imageData
+  for (const modelName of models) {
+    console.log(`Attempting with model: ${modelName}`);
+    const model = genAI.getGenerativeModel({ model: modelName });
+
+    for (let i = 0; i < retries; i++) {
+      try {
+        console.log(`Attempt ${i + 1} with ${modelName}`);
+        const result = await model.generateContent([
+          prompt,
+          {
+            inlineData: {
+              mimeType: "image/jpeg",
+              data: imageData
+            }
           }
+        ]);
+        console.log(`Successfully generated content with ${modelName} on attempt ${i + 1}`);
+        return result;
+      } catch (error) {
+        console.log(`Attempt ${i + 1} with ${modelName} failed:`, error.message);
+        lastError = error;
+        
+        if (error.message.includes('503') || error.message.includes('overloaded')) {
+          const baseDelay = 3000; // Start with 3s base delay
+          const waitTime = baseDelay * Math.pow(2, i); // Exponential backoff
+          const jitter = Math.random() * 1000; // Add random jitter up to 1s
+          const totalWaitTime = waitTime + jitter;
+          
+          console.log(`Model ${modelName} overloaded. Waiting ${totalWaitTime}ms before next attempt`);
+          await delay(totalWaitTime);
+          continue;
         }
-      ]);
-      console.log('Successfully generated content on attempt', i + 1);
-      return result;
-    } catch (error) {
-      console.log(`Attempt ${i + 1} failed:`, error.message);
-      lastError = error;
-      
-      if (error.message.includes('503') || error.message.includes('overloaded')) {
-        const waitTime = 2000 * Math.pow(2, i); // Start with 2s and increase exponentially
-        console.log(`Waiting ${waitTime}ms before next attempt`);
-        await delay(waitTime);
-        continue;
+        
+        if (error.message.includes('404')) {
+          console.log(`Model ${modelName} not available, trying next model`);
+          break; // Try next model
+        }
+        
+        break; // If it's not a retriable error, stop trying
       }
-      break; // If it's not a 503/overload error, stop retrying
     }
   }
 
-  // If all retries failed, throw a more informative error
-  console.error('All retry attempts failed:', lastError);
-  throw new Error(`Service temporarily unavailable after ${retries} attempts. Please try again in a few minutes.`);
+  // If all retries with all models failed, throw a more informative error
+  console.error('All retry attempts with all models failed:', lastError);
+  throw new Error(`Service temporarily unavailable. We tried multiple models with several retries but the service is currently experiencing high load. Please try again in a few minutes.`);
 }
 
 serve(async (req) => {
