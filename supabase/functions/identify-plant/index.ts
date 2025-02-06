@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.3";
@@ -7,6 +8,45 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-user-id',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
+
+// Helper function to add delay
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Helper function to try different models with retry logic
+async function tryWithModels(genAI: any, prompt: string, imageData: any, retries = 3) {
+  const models = ['gemini-1.5-flash', 'gemini-1.0-pro-vision-latest'];
+  let lastError;
+
+  for (const modelName of models) {
+    console.log(`Trying with model: ${modelName}`);
+    const model = genAI.getGenerativeModel({ model: modelName });
+
+    for (let i = 0; i < retries; i++) {
+      try {
+        const result = await model.generateContent([
+          prompt,
+          {
+            inlineData: {
+              mimeType: "image/jpeg",
+              data: imageData
+            }
+          }
+        ]);
+        return result;
+      } catch (error) {
+        console.log(`Attempt ${i + 1} with ${modelName} failed:`, error.message);
+        lastError = error;
+        
+        if (error.message.includes('overloaded')) {
+          await delay(1000 * (i + 1)); // Exponential backoff
+          continue;
+        }
+        break; // If it's not an overload error, try next model
+      }
+    }
+  }
+  throw lastError; // If all attempts fail, throw the last error
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -57,7 +97,6 @@ serve(async (req) => {
 
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `Analyze this plant image and provide the following information in a clear, structured format:
     1. Common name
@@ -83,16 +122,8 @@ serve(async (req) => {
       "confidence_level": "string"
     }`;
 
-    console.log('Sending request to Gemini API');
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          mimeType: "image/jpeg",
-          data: base64Image
-        }
-      }
-    ]);
+    console.log('Sending request to Gemini API with retry logic');
+    const result = await tryWithModels(genAI, prompt, base64Image);
 
     const response = result.response;
     const text = response.text();
