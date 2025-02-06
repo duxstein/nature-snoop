@@ -12,37 +12,33 @@ const corsHeaders = {
 // Helper function to add delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Helper function to try different models with retry logic
-async function tryWithModels(genAI: any, prompt: string, imageData: any, retries = 3) {
-  const models = ['gemini-1.5-flash', 'gemini-1.0-pro-vision-latest'];
+// Helper function to try model with retry logic
+async function tryWithRetries(genAI: any, prompt: string, imageData: any, retries = 3) {
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
   let lastError;
 
-  for (const modelName of models) {
-    console.log(`Trying with model: ${modelName}`);
-    const model = genAI.getGenerativeModel({ model: modelName });
-
-    for (let i = 0; i < retries; i++) {
-      try {
-        const result = await model.generateContent([
-          prompt,
-          {
-            inlineData: {
-              mimeType: "image/jpeg",
-              data: imageData
-            }
+  for (let i = 0; i < retries; i++) {
+    try {
+      console.log(`Attempt ${i + 1} with gemini-1.5-flash`);
+      const result = await model.generateContent([
+        prompt,
+        {
+          inlineData: {
+            mimeType: "image/jpeg",
+            data: imageData
           }
-        ]);
-        return result;
-      } catch (error) {
-        console.log(`Attempt ${i + 1} with ${modelName} failed:`, error.message);
-        lastError = error;
-        
-        if (error.message.includes('overloaded')) {
-          await delay(1000 * (i + 1)); // Exponential backoff
-          continue;
         }
-        break; // If it's not an overload error, try next model
+      ]);
+      return result;
+    } catch (error) {
+      console.log(`Attempt ${i + 1} failed:`, error.message);
+      lastError = error;
+      
+      if (error.message.includes('overloaded')) {
+        await delay(1000 * Math.pow(2, i)); // Exponential backoff
+        continue;
       }
+      break; // If it's not an overload error, stop retrying
     }
   }
   throw lastError; // If all attempts fail, throw the last error
@@ -123,7 +119,7 @@ serve(async (req) => {
     }`;
 
     console.log('Sending request to Gemini API with retry logic');
-    const result = await tryWithModels(genAI, prompt, base64Image);
+    const result = await tryWithRetries(genAI, prompt, base64Image);
 
     const response = result.response;
     const text = response.text();
