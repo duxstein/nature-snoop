@@ -13,7 +13,7 @@ const corsHeaders = {
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Helper function to try model with retry logic
-async function tryWithRetries(genAI: any, prompt: string, imageData: any, retries = 3) {
+async function tryWithRetries(genAI: any, prompt: string, imageData: any, retries = 5) {
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
   let lastError;
 
@@ -29,19 +29,25 @@ async function tryWithRetries(genAI: any, prompt: string, imageData: any, retrie
           }
         }
       ]);
+      console.log('Successfully generated content on attempt', i + 1);
       return result;
     } catch (error) {
       console.log(`Attempt ${i + 1} failed:`, error.message);
       lastError = error;
       
-      if (error.message.includes('overloaded')) {
-        await delay(1000 * Math.pow(2, i)); // Exponential backoff
+      if (error.message.includes('503') || error.message.includes('overloaded')) {
+        const waitTime = 2000 * Math.pow(2, i); // Start with 2s and increase exponentially
+        console.log(`Waiting ${waitTime}ms before next attempt`);
+        await delay(waitTime);
         continue;
       }
-      break; // If it's not an overload error, stop retrying
+      break; // If it's not a 503/overload error, stop retrying
     }
   }
-  throw lastError; // If all attempts fail, throw the last error
+
+  // If all retries failed, throw a more informative error
+  console.error('All retry attempts failed:', lastError);
+  throw new Error(`Service temporarily unavailable after ${retries} attempts. Please try again in a few minutes.`);
 }
 
 serve(async (req) => {
