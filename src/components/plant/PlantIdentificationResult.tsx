@@ -40,6 +40,22 @@ const PlantIdentificationResult = ({ result, imageUrl }: PlantIdentificationResu
     ));
   };
 
+  const renderTreatmentBullets = (treatment: string) => {
+    // Split the treatment string by periods or line breaks
+    const points = treatment
+      .split(/[.\n]/)
+      .map(point => point.trim())
+      .filter(point => point.length > 0);
+
+    return (
+      <ul className="list-disc pl-5 space-y-1">
+        {points.map((point, index) => (
+          <li key={index} className="text-natural-600">{point}</li>
+        ))}
+      </ul>
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -80,10 +96,10 @@ const PlantIdentificationResult = ({ result, imageUrl }: PlantIdentificationResu
                   </p>
                 )}
                 {result.health_analysis.treatment && (
-                  <p className="text-natural-600">
+                  <div className="text-natural-600">
                     <span className="font-medium">Treatment: </span>
-                    {result.health_analysis.treatment}
-                  </p>
+                    {renderTreatmentBullets(result.health_analysis.treatment)}
+                  </div>
                 )}
               </div>
             </div>

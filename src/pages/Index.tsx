@@ -13,6 +13,7 @@ import WavingPlant from "@/components/WavingPlant";
 import Header from "@/components/layout/Header";
 import SearchHistory from "@/components/plant/SearchHistory";
 import { getValidUrl } from "@/utils/urlUtils";
+import PlantAR from "@/components/plant/PlantAR";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const Index = () => {
   const [identificationResult, setIdentificationResult] = useState<any>(null);
   const [searchHistory, setSearchHistory] = useState<any[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [showAR, setShowAR] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -132,6 +134,8 @@ const Index = () => {
       <WavingPlant />
       <Header user={user} />
 
+      {showAR && <PlantAR />}
+
       <main className="relative">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-natural-200/30 via-transparent to-transparent pointer-events-none" />
         
@@ -171,10 +175,20 @@ const Index = () => {
             </motion.div>
 
             {identificationResult && (
-              <PlantIdentificationResult 
-                result={identificationResult}
-                imageUrl={identificationResult.image_url}
-              />
+              <div>
+                <PlantIdentificationResult 
+                  result={identificationResult}
+                  imageUrl={identificationResult.image_url}
+                />
+                <div className="mt-4 text-center">
+                  <Button
+                    onClick={() => setShowAR(true)}
+                    className="bg-natural-600 hover:bg-natural-700 text-white"
+                  >
+                    View in AR
+                  </Button>
+                </div>
+              </div>
             )}
 
             {user && searchHistory.length > 0 && (
