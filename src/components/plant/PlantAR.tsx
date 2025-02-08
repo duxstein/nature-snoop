@@ -10,7 +10,6 @@ interface PlantARProps {
   onClose: () => void;
 }
 
-// Add type declaration for WebXR
 declare global {
   interface Navigator {
     xr?: {
@@ -35,6 +34,8 @@ const PlantAR = ({ modelUrl, onClose }: PlantARProps) => {
 
     // Set up scene
     const scene = new THREE.Scene();
+    scene.background = null; // Make background transparent
+    
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -62,7 +63,7 @@ const PlantAR = ({ modelUrl, onClose }: PlantARProps) => {
     directionalLight.position.set(0, 1, 0);
     scene.add(directionalLight);
 
-    // Add a plant model (using a placeholder object for now)
+    // Add a plant model
     const geometry = new THREE.CylinderGeometry(0.2, 0.2, 0.5, 32);
     const material = new THREE.MeshPhongMaterial({ 
       color: 0x00aa00,
@@ -93,15 +94,14 @@ const PlantAR = ({ modelUrl, onClose }: PlantARProps) => {
 
     // Animation loop
     const clock = new THREE.Clock();
-    const animate = () => {
+    function animate() {
       requestAnimationFrame(animate);
-      
       const delta = clock.getDelta();
       plant.rotation.y += delta * 0.5;
-      
       renderer.render(scene, camera);
-    };
-    animate();
+    }
+
+    renderer.setAnimationLoop(animate);
 
     // Handle window resize
     const handleResize = () => {
@@ -113,6 +113,7 @@ const PlantAR = ({ modelUrl, onClose }: PlantARProps) => {
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      renderer.setAnimationLoop(null);
       if (containerRef.current) {
         containerRef.current.innerHTML = '';
       }
