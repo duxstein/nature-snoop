@@ -10,6 +10,16 @@ interface PlantARProps {
   onClose: () => void;
 }
 
+// Add type declaration for WebXR
+declare global {
+  interface Navigator {
+    xr?: {
+      isSessionSupported(mode: string): Promise<boolean>;
+      requestSession(mode: string, options?: any): Promise<any>;
+    };
+  }
+}
+
 const PlantAR = ({ modelUrl, onClose }: PlantARProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isARSupported, setIsARSupported] = useState(true);
