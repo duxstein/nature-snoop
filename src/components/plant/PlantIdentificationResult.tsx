@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
 
@@ -11,12 +12,19 @@ interface CareInstructions {
   propagation?: string;
 }
 
+interface HealthAnalysis {
+  status: string;
+  issues: string;
+  treatment: string;
+}
+
 interface PlantIdentificationResultProps {
   result: {
     common_name: string;
     scientific_name: string;
     description: string;
     care_instructions: CareInstructions;
+    health_analysis: HealthAnalysis;
     confidence_level: string;
   };
   imageUrl?: string;
@@ -57,6 +65,27 @@ const PlantIdentificationResult = ({ result, imageUrl }: PlantIdentificationResu
             <div>
               <h3 className="font-semibold text-natural-800 mb-2">Description</h3>
               <p className="text-natural-600">{result.description}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-natural-800 mb-2">Health Analysis</h3>
+              <div className="bg-natural-50 p-4 rounded-lg border border-natural-200">
+                <p className="text-natural-600 mb-2">
+                  <span className="font-medium">Status: </span>
+                  {result.health_analysis.status}
+                </p>
+                {result.health_analysis.issues && (
+                  <p className="text-natural-600 mb-2">
+                    <span className="font-medium">Issues: </span>
+                    {result.health_analysis.issues}
+                  </p>
+                )}
+                {result.health_analysis.treatment && (
+                  <p className="text-natural-600">
+                    <span className="font-medium">Treatment: </span>
+                    {result.health_analysis.treatment}
+                  </p>
+                )}
+              </div>
             </div>
             <div>
               <h3 className="font-semibold text-natural-800 mb-2">Care Instructions</h3>

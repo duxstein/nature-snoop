@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.3";
@@ -135,7 +134,11 @@ serve(async (req) => {
     2. Scientific name
     3. Brief description
     4. Care instructions including light, water, soil, temperature, humidity, fertilizer, and propagation
-    5. Confidence level (High/Medium/Low)
+    5. Health analysis:
+       - Identify any visible signs of disease, pest infestation, or nutritional deficiencies
+       - If issues are found, provide treatment recommendations
+       - If the plant appears healthy, note that
+    6. Confidence level (High/Medium/Low)
 
     Respond with only the requested information in this exact JSON format:
     {
@@ -150,6 +153,11 @@ serve(async (req) => {
         "humidity": "string",
         "fertilizer": "string",
         "propagation": "string"
+      },
+      "health_analysis": {
+        "status": "string",
+        "issues": "string",
+        "treatment": "string"
       },
       "confidence_level": "string"
     }`;
@@ -225,4 +233,3 @@ serve(async (req) => {
     );
   }
 });
-
