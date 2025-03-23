@@ -1,9 +1,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { ARButton } from '@ar-js-org/ar.js/three.js/build/ar-threex.js';
 import { Button } from '../ui/button';
 import { X } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface PlantARProps {
   modelUrl?: string;
@@ -22,16 +22,29 @@ declare global {
 const PlantAR = ({ modelUrl, onClose }: PlantARProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isARSupported, setIsARSupported] = useState(true);
+  const [showStartButton, setShowStartButton] = useState(true);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-
     // Check WebXR support
     if (!navigator.xr) {
       setIsARSupported(false);
       return;
     }
 
+    navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
+      setIsARSupported(supported);
+      if (!supported) {
+        toast.error('AR not supported on this device');
+      }
+    }).catch(() => {
+      setIsARSupported(false);
+      toast.error('Error checking AR support');
+    });
+  }, []);
+
+  const startAR = () => {
+    if (!containerRef.current) return;
+    
     // Set up scene
     const scene = new THREE.Scene();
     scene.background = null; // Make background transparent
@@ -45,16 +58,12 @@ const PlantAR = ({ modelUrl, onClose }: PlantARProps) => {
     
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.xr.enabled = true;
+    
+    if (renderer.xr) {
+      renderer.xr.enabled = true;
+    }
+    
     containerRef.current.appendChild(renderer.domElement);
-
-    // Add AR support
-    const arButton = ARButton.createButton(renderer, {
-      optionalFeatures: ['dom-overlay'],
-      domOverlay: { root: containerRef.current },
-      requiredFeatures: ['hit-test'],
-    });
-    containerRef.current.appendChild(arButton);
 
     // Add lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -95,7 +104,6 @@ const PlantAR = ({ modelUrl, onClose }: PlantARProps) => {
     // Animation loop
     const clock = new THREE.Clock();
     function animate() {
-      requestAnimationFrame(animate);
       const delta = clock.getDelta();
       plant.rotation.y += delta * 0.5;
       renderer.render(scene, camera);
@@ -111,6 +119,8 @@ const PlantAR = ({ modelUrl, onClose }: PlantARProps) => {
     };
     window.addEventListener('resize', handleResize);
 
+    setShowStartButton(false);
+
     return () => {
       window.removeEventListener('resize', handleResize);
       renderer.setAnimationLoop(null);
@@ -118,7 +128,7 @@ const PlantAR = ({ modelUrl, onClose }: PlantARProps) => {
         containerRef.current.innerHTML = '';
       }
     };
-  }, [modelUrl]);
+  };
 
   if (!isARSupported) {
     return (
@@ -134,11 +144,22 @@ const PlantAR = ({ modelUrl, onClose }: PlantARProps) => {
 
   return (
     <div className="fixed inset-0 z-50">
-      <div ref={containerRef} className="w-full h-full" />
+      <div ref={containerRef} className="w-full h-full">
+        {showStartButton && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Button 
+              onClick={startAR}
+              className="bg-primary hover:bg-primary/90 text-white font-bold py-2 px-4 rounded"
+            >
+              Start AR Experience
+            </Button>
+          </div>
+        )}
+      </div>
       <Button
         variant="outline"
         size="icon"
-        className="absolute top-4 right-4 z-50"
+        className="absolute top-4 right-4 z-50 bg-white"
         onClick={onClose}
       >
         <X className="h-4 w-4" />
