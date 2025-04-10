@@ -31,7 +31,7 @@ const Welcome = ({ user }: WelcomeProps) => {
         <Button
           size="lg"
           className="bg-natural-600 hover:bg-natural-700 text-white"
-          onClick={() => navigate("/signup")}
+          onClick={() => navigate("/login?view=sign_up")}
         >
           Start Identifying Plants
         </Button>
