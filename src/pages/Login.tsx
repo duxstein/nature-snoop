@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -51,6 +53,13 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-natural-50 to-natural-100 flex items-center justify-center p-4">
       <Card className="w-[400px] p-6 bg-white/80 backdrop-blur-sm">
+        <Alert className="mb-4 bg-blue-50 border-blue-200">
+          <InfoIcon className="h-4 w-4 text-blue-500" />
+          <AlertDescription className="text-sm text-blue-700">
+            If you're not receiving confirmation emails, please check your spam folder or contact support.
+          </AlertDescription>
+        </Alert>
+        
         <Auth
           supabaseClient={supabase}
           appearance={{
