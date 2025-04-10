@@ -1,12 +1,19 @@
-import { useEffect } from "react";
+
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
+import { isValidEmail } from "@/utils/validation";
+import PasswordStrengthMeter from "@/components/auth/PasswordStrengthMeter";
 
 const Signup = () => {
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -17,6 +24,29 @@ const Signup = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Clear email error when email changes
+  useEffect(() => {
+    if (email) {
+      if (!isValidEmail(email)) {
+        setEmailError("Please enter a valid email address");
+      } else {
+        setEmailError("");
+      }
+    } else {
+      setEmailError("");
+    }
+  }, [email]);
+
+  // Handle email input capture for validation
+  const handleEmailInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+  };
+
+  // Handle password input capture for strength meter
+  const handlePasswordInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-natural-50 to-natural-100 flex items-center justify-center p-4">
@@ -32,7 +62,8 @@ const Signup = () => {
                   brandAccent: '#16a34a',
                 }
               }
-            }
+            },
+            extend: true,
           }}
           theme="light"
           providers={[]}
@@ -52,7 +83,25 @@ const Signup = () => {
               }
             }
           }}
+          onInputChange={(e) => {
+            // Type assertion since we know the target is an input element
+            const target = e.target as HTMLInputElement;
+            
+            if (target.name === 'email') {
+              handleEmailInput(e as React.ChangeEvent<HTMLInputElement>);
+            } else if (target.name === 'password') {
+              handlePasswordInput(e as React.ChangeEvent<HTMLInputElement>);
+            }
+          }}
         />
+        
+        {/* Email error message */}
+        {emailError && (
+          <div className="mt-2 text-red-500 text-sm">{emailError}</div>
+        )}
+        
+        {/* Password strength meter - only show when password field has input */}
+        {password && <PasswordStrengthMeter password={password} />}
       </Card>
     </div>
   );

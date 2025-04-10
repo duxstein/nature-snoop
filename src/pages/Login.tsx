@@ -1,13 +1,17 @@
+
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { isValidEmail } from "@/utils/validation";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -47,6 +51,24 @@ const Login = () => {
     };
   }, [navigate]);
 
+  // Clear email error when email changes
+  useEffect(() => {
+    if (email) {
+      if (!isValidEmail(email)) {
+        setEmailError("Please enter a valid email address");
+      } else {
+        setEmailError("");
+      }
+    } else {
+      setEmailError("");
+    }
+  }, [email]);
+
+  // Handle email input capture for validation
+  const handleEmailInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-natural-50 to-natural-100 flex items-center justify-center p-4">
       <Card className="w-[400px] p-6 bg-white/80 backdrop-blur-sm">
@@ -61,7 +83,8 @@ const Login = () => {
                   brandAccent: '#16a34a',
                 }
               }
-            }
+            },
+            extend: true,
           }}
           theme="light"
           providers={[]}
@@ -90,7 +113,20 @@ const Login = () => {
               },
             },
           }}
+          onInputChange={(e) => {
+            // Type assertion since we know the target is an input element
+            const target = e.target as HTMLInputElement;
+            
+            if (target.name === 'email') {
+              handleEmailInput(e as React.ChangeEvent<HTMLInputElement>);
+            }
+          }}
         />
+        
+        {/* Email error message */}
+        {emailError && (
+          <div className="mt-2 text-red-500 text-sm">{emailError}</div>
+        )}
       </Card>
     </div>
   );
