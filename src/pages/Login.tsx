@@ -6,13 +6,14 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InfoIcon, Leaf, TreeDeciduous, Sprout } from "lucide-react";
+import { Leaf, TreeDeciduous, Sprout } from "lucide-react";
 import { motion } from "framer-motion";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useIsMobile();
   const searchParams = new URLSearchParams(location.search);
   const initialView = searchParams.get('view') || 'sign_in';
 
@@ -54,6 +55,19 @@ const Login = () => {
     };
   }, [navigate]);
 
+  // Simpler animations for mobile
+  const getInitialProps = () => {
+    return isMobile 
+      ? { opacity: 0 }
+      : { opacity: 0, y: 20 };
+  };
+
+  const getAnimateProps = () => {
+    return isMobile
+      ? { opacity: 1 }
+      : { opacity: 1, y: 0 };
+  };
+
   const staggerDelay = 0.1;
 
   return (
@@ -61,34 +75,38 @@ const Login = () => {
       <div className="absolute top-0 right-0 w-64 h-64 bg-natural-100 rounded-full -mt-20 -mr-20 opacity-50"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-natural-200 rounded-full -mb-48 -ml-48 opacity-30"></div>
       
-      {/* Plant decorations */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 0.7, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.8 }}
-        className="absolute top-20 left-20 text-natural-600 hidden md:block"
-      >
-        <TreeDeciduous size={48} />
-      </motion.div>
-      
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 0.7, y: 0 }}
-        transition={{ delay: 0.7, duration: 0.8 }}
-        className="absolute bottom-20 right-20 text-natural-700 hidden md:block"
-      >
-        <Sprout size={36} />
-      </motion.div>
+      {/* Plant decorations - hidden on mobile */}
+      {!isMobile && (
+        <>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 0.7, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="absolute top-20 left-20 text-natural-600 hidden md:block"
+          >
+            <TreeDeciduous size={48} />
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 0.7, y: 0 }}
+            transition={{ delay: 0.7, duration: 0.8 }}
+            className="absolute bottom-20 right-20 text-natural-700 hidden md:block"
+          >
+            <Sprout size={36} />
+          </motion.div>
+        </>
+      )}
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={getInitialProps()}
+        animate={getAnimateProps()}
         transition={{ duration: 0.6 }}
         className="z-10 w-full max-w-md"
       >
         <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={getInitialProps()}
+          animate={getAnimateProps()}
           transition={{ delay: staggerDelay, duration: 0.6 }}
           className="flex justify-center mb-6"
         >
@@ -101,23 +119,10 @@ const Login = () => {
         </motion.div>
 
         <Card className="w-full p-6 bg-white/90 backdrop-blur-sm border-natural-200 shadow-lg">
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: staggerDelay * 2, duration: 0.6 }}
-          >
-            <Alert className="mb-4 bg-blue-50 border-blue-200">
-              <InfoIcon className="h-4 w-4 text-blue-500" />
-              <AlertDescription className="text-sm text-blue-700">
-                If you're not receiving confirmation emails, please check your spam folder or contact support.
-              </AlertDescription>
-            </Alert>
-          </motion.div>
-          
           <CardContent className="p-0">
             <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={getInitialProps()}
+              animate={getAnimateProps()}
               transition={{ delay: staggerDelay * 3, duration: 0.6 }}
             >
               <Auth
