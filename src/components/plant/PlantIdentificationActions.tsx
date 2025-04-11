@@ -1,5 +1,6 @@
+
 import { Button } from "@/components/ui/button";
-import { Camera, Upload, Loader2 } from "lucide-react";
+import { Camera, Upload, Loader2, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -23,11 +24,24 @@ const PlantIdentificationActions = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [showCamera, setShowCamera] = useState(false);
+  const [usingFrontCamera, setUsingFrontCamera] = useState(false);
 
-  const startCamera = async () => {
+  const startCamera = async (useFrontCamera = false) => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // Stop any existing stream before starting a new one
+      if (stream) {
+        stopCamera();
+      }
+
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: useFrontCamera ? "user" : "environment",
+        }
+      });
+      
       setStream(mediaStream);
+      setUsingFrontCamera(useFrontCamera);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
       }
@@ -35,6 +49,10 @@ const PlantIdentificationActions = ({
       console.error('Error accessing camera:', error);
       toast.error('Failed to access camera');
     }
+  };
+
+  const toggleCamera = () => {
+    startCamera(!usingFrontCamera);
   };
 
   const stopCamera = () => {
@@ -86,7 +104,8 @@ const PlantIdentificationActions = ({
           <Button
             onClick={() => {
               setShowCamera(true);
-              startCamera();
+              // Default to back camera (environment) when opening
+              startCamera(false);
             }}
             className="bg-natural-600 hover:bg-natural-700 text-white"
             disabled={isIdentifying}
@@ -106,9 +125,19 @@ const PlantIdentificationActions = ({
                 playsInline
                 className="w-full max-w-md rounded-lg"
               />
-              <Button onClick={captureImage} disabled={isIdentifying}>
-                Capture
-              </Button>
+              <div className="flex gap-3">
+                <Button onClick={captureImage} disabled={isIdentifying}>
+                  Capture
+                </Button>
+                <Button 
+                  onClick={toggleCamera} 
+                  variant="outline" 
+                  className="bg-natural-100"
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Switch Camera
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
