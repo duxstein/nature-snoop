@@ -17,6 +17,7 @@ const PlantIdentification = ({ user, onIdentificationComplete }: PlantIdentifica
   const [isIdentifying, setIsIdentifying] = useState(false);
   const [identificationResult, setIdentificationResult] = useState<any>(null);
   const [showAR, setShowAR] = useState(false);
+  const [arModelUrl, setArModelUrl] = useState<string | undefined>(undefined);
 
   const handleImageUpload = async (file: Blob) => {
     if (!user) {
@@ -65,6 +66,13 @@ const PlantIdentification = ({ user, onIdentificationComplete }: PlantIdentifica
     }
   };
 
+  const handleViewInAR = () => {
+    // In a production app, we would set the model URL based on the plant type
+    // For now, we'll use our default plant model
+    setShowAR(true);
+    toast.info("Launching AR experience");
+  };
+
   return (
     <>
       <PlantIdentificationActions
@@ -80,7 +88,7 @@ const PlantIdentification = ({ user, onIdentificationComplete }: PlantIdentifica
           />
           <div className="mt-4 text-center">
             <button
-              onClick={() => setShowAR(true)}
+              onClick={handleViewInAR}
               className="bg-natural-600 hover:bg-natural-700 text-white px-4 py-2 rounded"
             >
               View in AR
@@ -89,7 +97,7 @@ const PlantIdentification = ({ user, onIdentificationComplete }: PlantIdentifica
         </div>
       )}
 
-      {showAR && <PlantAR onClose={() => setShowAR(false)} />}
+      {showAR && <PlantAR modelUrl={arModelUrl} onClose={() => setShowAR(false)} />}
     </>
   );
 };
